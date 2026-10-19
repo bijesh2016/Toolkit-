@@ -1,0 +1,36 @@
+{
+  "name": "tools-hub-backend",
+  "version": "1.0.0",
+  "description": "API Services and Documentation for Bijesh Tools Hub",
+  "main": "src/server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js"
+  },
+  "keywords": [
+    "tools-hub",
+    "developer-tools",
+    "nepal-tools",
+    "swagger",
+    "api"
+  ],
+  "author": "Bijesh Sharma <bijeshsharam.com.np>",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.7.9",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
+    "helmet": "^8.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
+    "nepali-date-converter": "^3.4.0",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  }
+}
