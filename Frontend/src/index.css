@@ -1,0 +1,218 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light;
+    --page-bg: #f8fafc;
+    --ink: #172033;
+    --muted: #64748b;
+    --surface: rgba(255, 255, 255, 0.86);
+    --surface-solid: #ffffff;
+    --line: #e2e8f0;
+    --accent: #6256d9;
+  }
+
+  body {
+    background:
+      radial-gradient(circle at 7% 8%, rgba(129, 140, 248, 0.2), transparent 29rem),
+      radial-gradient(circle at 93% 18%, rgba(45, 212, 191, 0.16), transparent 28rem),
+      linear-gradient(145deg, #f8fafc 0%, #eef2ff 48%, #f0fdfa 100%);
+    background-attachment: fixed;
+    color: var(--ink);
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    min-height: 100vh;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif;
+  }
+
+  /* Recolors legacy utility surfaces so tool pages share the light visual system. */
+  .light-theme [class*="bg-[#13151b]"],
+  .light-theme [class*="bg-[#111318]"] {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.86)) !important;
+  }
+
+  .light-theme [class*="bg-[#08090b]"] {
+    background-color: rgba(255, 255, 255, 0.72) !important;
+  }
+
+  .light-theme [class*="bg-[#181b22]"],
+  .light-theme [class*="bg-[#0a0b0f]"],
+  .light-theme [class*="bg-[#0b0c0e]"] {
+    background-color: #f8fafc !important;
+  }
+
+  .light-theme [class~="bg-slate-900"] {
+    background: linear-gradient(145deg, #ffffff 0%, #f1f5ff 100%) !important;
+  }
+
+  .light-theme [class*="bg-slate-900/"],
+  .light-theme [class*="bg-slate-950/"] {
+    background-color: #f8fafc !important;
+    background-image: none !important;
+  }
+
+  .light-theme [class~="bg-slate-950"] {
+    background-color: #f8fafc !important;
+  }
+
+  .light-theme [class~="bg-slate-800"],
+  .light-theme [class~="bg-slate-800/60"] {
+    background-color: #eef2ff !important;
+  }
+
+  .light-theme [class*="border-[#222631]"],
+  .light-theme [class*="border-[#1e2129]"],
+  .light-theme [class~="border-slate-800"],
+  .light-theme [class~="border-slate-700"] {
+    border-color: var(--line) !important;
+  }
+
+  .light-theme [class*="border-slate-800/"],
+  .light-theme [class*="border-slate-700/"] {
+    border-color: var(--line) !important;
+  }
+
+  .light-theme [class~="text-white"],
+  .light-theme [class~="text-slate-100"],
+  .light-theme [class~="text-slate-200"] {
+    color: var(--ink) !important;
+  }
+
+  .light-theme [class~="text-slate-300"],
+  .light-theme [class~="text-slate-400"] {
+    color: var(--muted) !important;
+  }
+
+  .light-theme [class~="text-slate-500"],
+  .light-theme [class~="text-slate-600"] {
+    color: #94a3b8 !important;
+  }
+
+  .light-theme [class*="text-slate-300"],
+  .light-theme [class*="text-slate-400"] {
+    color: var(--muted) !important;
+  }
+
+  .light-theme [class~="text-indigo-200"],
+  .light-theme [class~="text-rose-200"] {
+    color: #4338ca !important;
+  }
+
+  .light-theme button[class*="bg-indigo"],
+  .light-theme button[class*="bg-gradient"],
+  .light-theme a[class*="bg-indigo"] {
+    color: #ffffff !important;
+  }
+
+  .light-theme input,
+  .light-theme textarea,
+  .light-theme select {
+    color: var(--ink);
+  }
+
+  .light-theme input::placeholder,
+  .light-theme textarea::placeholder {
+    color: #94a3b8;
+  }
+
+  .light-theme [class*="shadow-xl"],
+  .light-theme [class*="shadow-2xl"] {
+    --tw-shadow-color: rgba(71, 85, 105, 0.14);
+  }
+
+  .light-theme [class*="hover:bg-[#181b22]"]:hover {
+    background-color: #eef2ff !important;
+  }
+
+  .light-theme .studio-card {
+    background: var(--surface-solid);
+    border-color: var(--line);
+    box-shadow: 0 10px 30px -18px rgba(51, 65, 85, 0.35);
+  }
+
+  .light-theme .studio-card:hover {
+    background: #ffffff;
+    border-color: #c7d2fe;
+    box-shadow: 0 18px 35px -18px rgba(79, 70, 229, 0.28);
+  }
+
+  .light-theme .bs-ad-workspace > div:first-child {
+    background:
+      radial-gradient(circle at 85% 10%, rgba(129, 140, 248, 0.24), transparent 15rem),
+      linear-gradient(135deg, #ffffff, #eef2ff) !important;
+    border-color: #c7d2fe !important;
+    box-shadow: 0 20px 45px -28px rgba(79, 70, 229, 0.4) !important;
+  }
+
+  .light-theme .bs-ad-workspace > div:nth-child(2),
+  .light-theme .bs-ad-workspace .lg\:col-span-6 {
+    background: linear-gradient(145deg, #ffffff, #f8fafc) !important;
+    border-color: var(--line) !important;
+    box-shadow: 0 18px 35px -24px rgba(51, 65, 85, 0.35) !important;
+  }
+
+  .light-theme .bs-ad-workspace .lg\:col-span-6:last-child > div {
+    background: linear-gradient(145deg, #ffffff, #eef2ff) !important;
+    border-color: #c7d2fe !important;
+  }
+}
+
+/* Human-Crafted Tactile Studio Panels (Solid, high-contrast, no AI glassmorphism/neon blur) */
+.studio-card {
+  background: #13151b;
+  border: 1px solid #222631;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.4);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.studio-card:hover {
+  background: #181b22;
+  border-color: #323846;
+  box-shadow: 0 6px 20px -2px rgba(0, 0, 0, 0.6);
+  transform: translateY(-2px);
+}
+
+/* Tactile Inset Panel (for inputs, terminal views, search bars) */
+.studio-inset {
+  background: #0a0b0f;
+  border: 1px solid #222631;
+}
+
+/* Human-Grade Subtle Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+background: #eef2f7;
+}
+
+::-webkit-scrollbar-thumb {
+background: #cbd5e1;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+background: #94a3b8;
+}
+
+/* Print styling */
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+}
