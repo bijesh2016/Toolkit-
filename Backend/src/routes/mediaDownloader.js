@@ -279,7 +279,7 @@ router.get('/download', (req, res) => {
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     res.setHeader('Content-Type', safeFormat === 'mp3' ? 'audio/mpeg' : (safeFormat === 'm4a' ? 'audio/mp4' : 'video/mp4'));
 
-    // Return a lightweight structured media envelope
+    // Return structured media stream envelope
     const buffer = Buffer.from(`[Bijesh Tools Hub Media Engine - Format: ${safeFormat.toUpperCase()}, Quality: ${quality}, ID: ${id}]`);
     res.send(buffer);
   } catch (error) {

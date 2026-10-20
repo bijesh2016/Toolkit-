@@ -140,20 +140,40 @@
   }
 
   .light-theme button[class*="bg-indigo"],
+  .light-theme button[class*="bg-rose"],
+  .light-theme button[class*="bg-emerald"],
+  .light-theme button[class*="bg-cyan"],
+  .light-theme button[class*="bg-purple"],
+  .light-theme button[class*="bg-blue"],
+  .light-theme button[class*="bg-amber"],
   .light-theme button[class*="bg-gradient"],
-  .light-theme a[class*="bg-indigo"] {
+  .light-theme a[class*="bg-indigo"],
+  .light-theme a[class*="bg-rose"],
+  .light-theme a[class*="bg-gradient"] {
+    color: #ffffff !important;
+  }
+
+  .light-theme button[class*="bg-indigo"] *,
+  .light-theme button[class*="bg-rose"] *,
+  .light-theme button[class*="bg-emerald"] *,
+  .light-theme button[class*="bg-cyan"] *,
+  .light-theme button[class*="bg-purple"] *,
+  .light-theme button[class*="bg-blue"] *,
+  .light-theme button[class*="bg-gradient"] * {
     color: #ffffff !important;
   }
 
   .light-theme input,
   .light-theme textarea,
   .light-theme select {
-    color: var(--ink);
+    background-color: #ffffff !important;
+    border-color: #cbd5e1 !important;
+    color: var(--ink) !important;
   }
 
   .light-theme input::placeholder,
   .light-theme textarea::placeholder {
-    color: #94a3b8;
+    color: #94a3b8 !important;
   }
 
   .light-theme [class*="shadow-xl"],

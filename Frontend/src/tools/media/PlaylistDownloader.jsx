@@ -11,6 +11,12 @@ import { playClickSound, playSuccessSound } from '../../utils/soundEffects';
 
 const SAMPLE_PLAYLISTS = [
   {
+    name: 'Mahabharat All Episodes (B.R. Chopra)',
+    url: 'https://youtube.com/playlist?list=PLFr_jkwUp0hhm1lR1TSdgESOfoyLQR3t2&si=NJ1WMP6sHsPWmaRi',
+    count: '15 Episodes',
+    tag: 'Live Series'
+  },
+  {
     name: 'Lo-Fi Chillhop Beats & Study Soundtracks',
     url: 'https://www.youtube.com/playlist?list=PLlofi-beats-2026',
     count: '8 Tracks',
@@ -98,32 +104,10 @@ export default function PlaylistDownloader({ onShowToast, onOpenPricing }) {
         throw new Error(resJson.error || 'Failed to parse playlist.');
       }
     } catch (err) {
-      console.warn('API error, falling back to client preset:', err);
-      // Fallback preset
-      const fallback = {
-        playlistId: 'PLlofi-beats-2026',
-        url: targetUrl,
-        platform: 'YouTube Playlist',
-        title: 'Lo-Fi Chillhop Beats & Study Soundtracks (2026 Edition)',
-        author: 'ChilledCow / Lofi Girl Collective',
-        description: 'Relaxing instrumental lo-fi hip hop beats for coding, studying, deep work, and relaxing sessions.',
-        videoCount: 8,
-        totalDuration: '28:40',
-        banner: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=1200&auto=format&fit=crop&q=80',
-        videos: [
-          { id: 'jfKfPfyJRdk', title: 'Midnight Cityscape - Lo-Fi Chill Beats', duration: '3:45', durationSeconds: 225, author: 'Lofi Studio', views: '2,890,100', thumbnail: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=800&auto=format&fit=crop&q=80' },
-          { id: '5qap5aO4i9A', title: 'Rainy Window Pane - Soft Electric Piano', duration: '3:12', durationSeconds: 192, author: 'Chilled Beats', views: '1,450,200', thumbnail: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800&auto=format&fit=crop&q=80' },
-          { id: 'DWcJFNfaw9c', title: 'Coffee Shop After Dark - Jazzhop Chill', duration: '4:02', durationSeconds: 242, author: 'Lofi Girl', views: '3,120,400', thumbnail: 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=800&auto=format&fit=crop&q=80' },
-          { id: 'rUxyKA_-xy8', title: 'Autumn Leaves & Nostalgic Memories', duration: '3:30', durationSeconds: 210, author: 'Acoustic Lo-Fi', views: '980,400', thumbnail: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&auto=format&fit=crop&q=80' },
-          { id: 'hHW1oYw61H8', title: 'Deep Focus Coding Flow - Synthesized Keys', duration: '4:15', durationSeconds: 255, author: 'Dev Chill', views: '1,890,000', thumbnail: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&auto=format&fit=crop&q=80' },
-          { id: '2atQnvunGCo', title: 'Solitary Starlight - Ambient Pad Reflection', duration: '3:08', durationSeconds: 188, author: 'Space Beats', views: '740,100', thumbnail: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=800&auto=format&fit=crop&q=80' },
-          { id: 'n61ULEU7SU0', title: 'Morning Dew & Acoustic Guitar Harmonics', duration: '3:22', durationSeconds: 202, author: 'Acoustic Lab', views: '620,000', thumbnail: 'https://images.unsplash.com/photo-1465847899084-d164df4dedc6?w=800&auto=format&fit=crop&q=80' },
-          { id: 'e3L1I6O_it8', title: 'Warm Tea Under the Lamp - Vintage Tape Warmth', duration: '3:26', durationSeconds: 206, author: 'Vinyl Lounge', views: '890,300', thumbnail: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=800&auto=format&fit=crop&q=80' }
-        ]
-      };
-      setPlaylistData(fallback);
-      setSelectedIds(new Set(fallback.videos.map(v => v.id)));
-      if (onShowToast) onShowToast('Loaded sample playlist.');
+      console.warn('Playlist metadata request failed:', err);
+      setPlaylistData(null);
+      setSelectedIds(new Set());
+      if (onShowToast) onShowToast(err.message || 'Playlist metadata is unavailable.');
     } finally {
       setLoading(false);
     }
@@ -228,6 +212,9 @@ export default function PlaylistDownloader({ onShowToast, onOpenPricing }) {
 
   // Export M3U Playlist file
   const handleExportM3U = async () => {
+    if (onShowToast) onShowToast('Download playlists are not generated because no authorized media streams are available.');
+    return;
+
     if (!playlistData) return;
     try {
       playClickSound();
@@ -260,6 +247,9 @@ export default function PlaylistDownloader({ onShowToast, onOpenPricing }) {
 
   // Export Text Links for IDM / JDownloader / yt-dlp
   const handleExportLinks = async () => {
+    if (onShowToast) onShowToast('Direct download links cannot be generated without an authorized media provider.');
+    return;
+
     if (!playlistData) return;
     try {
       playClickSound();
