@@ -32,6 +32,13 @@
   }
 
   /* Recolors legacy utility surfaces so tool pages share the light visual system. */
+  .light-theme [class*="bg-[#0"],
+  .light-theme [class*="bg-[#1"],
+  .light-theme [class*="bg-[#2"] {
+    background-color: #f8fafc !important;
+    background-image: none !important;
+  }
+
   .light-theme [class*="bg-[#13151b]"],
   .light-theme [class*="bg-[#111318]"] {
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.86)) !important;
@@ -66,6 +73,27 @@
     background-color: #eef2ff !important;
   }
 
+  .light-theme [class~="bg-black"],
+  .light-theme [class~="bg-gray-900"],
+  .light-theme [class~="bg-zinc-900"],
+  .light-theme [class~="bg-neutral-900"] {
+    background-color: #f8fafc !important;
+  }
+
+  .light-theme [class*="from-slate-900"],
+  .light-theme [class*="from-slate-950"],
+  .light-theme [class*="via-slate-900"],
+  .light-theme [class*="via-slate-950"],
+  .light-theme [class*="to-slate-900"],
+  .light-theme [class*="to-slate-950"],
+  .light-theme [class*="from-gray-900"],
+  .light-theme [class*="to-gray-900"],
+  .light-theme [class*="from-indigo-950"],
+  .light-theme [class*="via-indigo-950"],
+  .light-theme [class*="to-indigo-950"] {
+    background-image: linear-gradient(135deg, #ffffff 0%, #eef2ff 100%) !important;
+  }
+
   .light-theme [class*="border-[#222631]"],
   .light-theme [class*="border-[#1e2129]"],
   .light-theme [class~="border-slate-800"],
@@ -92,6 +120,13 @@
   .light-theme [class~="text-slate-500"],
   .light-theme [class~="text-slate-600"] {
     color: #94a3b8 !important;
+  }
+
+  .light-theme [class~="text-gray-100"],
+  .light-theme [class~="text-gray-200"],
+  .light-theme [class~="text-zinc-100"],
+  .light-theme [class~="text-zinc-200"] {
+    color: var(--ink) !important;
   }
 
   .light-theme [class*="text-slate-300"],
@@ -160,6 +195,110 @@
   .light-theme .bs-ad-workspace .lg\:col-span-6:last-child > div {
     background: linear-gradient(145deg, #ffffff, #eef2ff) !important;
     border-color: #c7d2fe !important;
+  }
+}
+
+/* Responsive guardrails shared by every tool workspace. */
+.light-theme {
+  overflow-x: hidden;
+}
+
+.light-theme main {
+  min-width: 0;
+}
+
+.light-theme img,
+.light-theme canvas,
+.light-theme video {
+  max-width: 100%;
+}
+
+.light-theme pre {
+  max-width: 100%;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.light-theme input,
+.light-theme select,
+.light-theme textarea,
+.light-theme button {
+  max-width: 100%;
+}
+
+@media (max-width: 640px) {
+  .light-theme main {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+    padding-top: 1rem;
+    padding-bottom: 1.5rem;
+  }
+
+  .light-theme [class*="rounded-3xl"],
+  .light-theme [class*="rounded-2xl"] {
+    border-radius: 1.15rem;
+  }
+
+  .light-theme [class*="p-8"] {
+    padding: 1.25rem;
+  }
+
+  .light-theme [class*="p-7"] {
+    padding: 1.1rem;
+  }
+
+  .light-theme [class*="p-6"] {
+    padding: 1rem;
+  }
+
+  .light-theme [class*="grid-cols-3"],
+  .light-theme [class*="grid-cols-4"],
+  .light-theme [class*="grid-cols-5"],
+  .light-theme [class*="grid-cols-6"],
+  .light-theme [class*="grid-cols-7"],
+  .light-theme [class*="grid-cols-8"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .light-theme [class*="grid-cols-12"] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .light-theme [class*="lg\\:col-span-"],
+  .light-theme [class*="md\\:col-span-"] {
+    grid-column: span 1 / span 1;
+  }
+
+  .light-theme [class*="flex-row"] {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .light-theme [class*="self-start"],
+  .light-theme [class*="self-end"] {
+    align-self: stretch;
+  }
+
+  .light-theme [class*="w-96"],
+  .light-theme [class*="w-80"],
+  .light-theme [class*="w-72"],
+  .light-theme [class*="max-w-5xl"],
+  .light-theme [class*="max-w-6xl"] {
+    max-width: 100%;
+  }
+
+  .light-theme h1 {
+    font-size: clamp(1.65rem, 8vw, 2.35rem);
+    line-height: 1.08;
+  }
+
+  .light-theme h2 {
+    font-size: clamp(1.3rem, 6vw, 1.85rem);
+  }
+
+  .light-theme .overflow-x-auto {
+    scrollbar-width: thin;
   }
 }
 
