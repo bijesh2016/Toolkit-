@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { CreditCard, ArrowRight, Sparkles } from 'lucide-react';
+import { CreditCard } from 'lucide-react';
 
 export default function VatCalculator({ onShowToast }) {
   const [amount, setAmount] = useState('10000');
