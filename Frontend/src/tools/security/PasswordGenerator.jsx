@@ -16,8 +16,8 @@ export default function PasswordGenerator({ onShowToast }) {
   const [useNumbers, setUseNumbers] = useState(true);
   const [useSymbols, setUseSymbols] = useState(true);
   const [passphraseWordsCount, setPassphraseWordsCount] = useState(4);
-
   const [password, setPassword] = useState('');
+  const [copied, setCopied] = useState(false);
 
   const generate = () => {
     if (mode === 'passphrase') {
@@ -58,12 +58,12 @@ export default function PasswordGenerator({ onShowToast }) {
 
   // Entropy calculation
   const calculateEntropy = () => {
-    if (!password) return { bits: 0, strength: 'None', crackTime: 'Instant' };
+    if (!password) return { bits: 0, strength: 'None', crackTime: 'Instant', strengthLevel: 0 };
     let pool = 0;
     if (mode === 'passphrase') {
       pool = PASSPHRASE_WORDS.length;
       const bits = Math.round(passphraseWordsCount * Math.log2(pool));
-      return { bits, strength: bits > 60 ? 'Very Strong' : 'Strong', crackTime: 'Centuries' };
+      return { bits, strength: bits > 60 ? 'Very Strong' : 'Strong', crackTime: 'Centuries', strengthLevel: 4 };
     }
 
     if (/[a-z]/.test(password)) pool += 26;
@@ -74,17 +74,24 @@ export default function PasswordGenerator({ onShowToast }) {
     const bits = Math.round(password.length * Math.log2(pool || 1));
     let strength = 'Weak';
     let crackTime = 'Minutes';
-    if (bits > 40) { strength = 'Medium'; crackTime = 'Months'; }
-    if (bits > 60) { strength = 'Strong'; crackTime = 'Decades'; }
-    if (bits > 80) { strength = 'Very Strong'; crackTime = 'Millions of Years'; }
+    let strengthLevel = 1;
+    if (bits > 40) { strength = 'Medium'; crackTime = 'Months'; strengthLevel = 2; }
+    if (bits > 60) { strength = 'Strong'; crackTime = 'Decades'; strengthLevel = 3; }
+    if (bits > 80) { strength = 'Very Strong'; crackTime = 'Millions of Years'; strengthLevel = 4; }
 
-    return { bits, strength, crackTime };
+    return { bits, strength, crackTime, strengthLevel };
   };
 
   const entropy = calculateEntropy();
 
+  const strengthColors = ['', 'bg-rose-500', 'bg-amber-500', 'bg-emerald-400', 'bg-emerald-500'];
+  const strengthLabels = ['', 'text-rose-400', 'text-amber-400', 'text-emerald-400', 'text-emerald-300'];
+
   const handleCopy = () => {
+    if (!password) return;
     navigator.clipboard.writeText(password);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1800);
     if (onShowToast) onShowToast('Copied password securely to clipboard!');
   };
 
@@ -114,10 +121,37 @@ export default function PasswordGenerator({ onShowToast }) {
 
           <button
             onClick={handleCopy}
-            className="px-6 py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs flex items-center gap-2 shadow-lg shadow-indigo-600/20 transition-all"
+            className={`px-6 py-3.5 rounded-2xl font-semibold text-xs flex items-center gap-2 shadow-lg transition-all ${
+              copied
+                ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/20'
+                : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-600/20'
+            }`}
           >
-            <Copy className="w-4 h-4" /> Copy
+            {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+            {copied ? 'Copied!' : 'Copy'}
           </button>
+        </div>
+
+        {/* Strength Meter */}
+        <div className="space-y-1.5">
+          <div className="flex justify-between text-xs text-slate-400 mb-1">
+            <span>Password Strength</span>
+            <span className={`font-bold ${strengthLabels[entropy.strengthLevel]}`}>
+              {entropy.strength}
+            </span>
+          </div>
+          <div className="flex gap-1">
+            {[1, 2, 3, 4].map(level => (
+              <div
+                key={level}
+                className={`h-2 flex-1 rounded-full transition-all ${
+                  level <= entropy.strengthLevel
+                    ? strengthColors[entropy.strengthLevel]
+                    : 'bg-slate-800'
+                }`}
+              />
+            ))}
+          </div>
         </div>
 
         {/* Entropy Stats */}
@@ -125,7 +159,7 @@ export default function PasswordGenerator({ onShowToast }) {
           <div className="flex items-center gap-2">
             <span className="text-slate-400">Entropy:</span>
             <span className="font-bold text-indigo-400 font-mono">{entropy.bits} bits</span>
-            <span className="px-2 py-0.5 rounded-full bg-slate-800 text-emerald-300 text-[11px] font-bold">
+            <span className={`px-2 py-0.5 rounded-full bg-slate-800 text-[11px] font-bold ${strengthLabels[entropy.strengthLevel]}`}>
               {entropy.strength}
             </span>
           </div>
