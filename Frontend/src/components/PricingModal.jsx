@@ -1,17 +1,38 @@
-import React from 'react';
-import { X, Check, Zap, Sparkles, ShieldCheck } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Check, Zap, Sparkles, ShieldCheck, Crown } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { isProMember, setProMember } from '../utils/storage';
+import { playSuccessSound, playClickSound } from '../utils/soundEffects';
 
 export default function PricingModal({ isOpen, onClose }) {
+  const [isPro, setIsPro] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setIsPro(isProMember());
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const handleSimulateUpgrade = () => {
+    playSuccessSound();
+    setProMember(true);
+    setIsPro(true);
     confetti({
       particleCount: 80,
       spread: 70,
       origin: { y: 0.6 }
     });
-    alert('Pro Plan Activated: You now have unlimited AI tokens and custom API Key access in your browser session.');
+    setTimeout(() => {
+      onClose();
+    }, 1200);
+  };
+
+  const handleRevertToFree = () => {
+    playClickSound();
+    setProMember(false);
+    setIsPro(false);
     onClose();
   };
 
@@ -67,10 +88,10 @@ export default function PricingModal({ isOpen, onClose }) {
             </div>
 
             <button
-              onClick={onClose}
+              onClick={isPro ? handleRevertToFree : onClose}
               className="mt-8 w-full py-2.5 rounded-xl border border-[#222631] bg-[#181b22] hover:border-[#323846] text-slate-300 text-sm font-medium transition-colors cursor-pointer"
             >
-              Continue with Free
+              {isPro ? 'Switch to Free Tier' : 'Continue with Free'}
             </button>
           </div>
 
@@ -81,7 +102,10 @@ export default function PricingModal({ isOpen, onClose }) {
             </div>
 
             <div>
-              <div className="text-sm font-semibold text-indigo-400">Pro Professional</div>
+              <div className="text-sm font-semibold text-indigo-400 flex items-center gap-1.5">
+                <Crown className="w-4 h-4 text-amber-300 fill-amber-300" />
+                <span>Pro Professional</span>
+              </div>
               <div className="text-3xl font-bold text-white mt-2">
                 NPR 499 <span className="text-sm font-normal text-slate-400 font-mono">/ month ($4.99)</span>
               </div>
@@ -94,43 +118,26 @@ export default function PricingModal({ isOpen, onClose }) {
                 </li>
                 <li className="flex items-center gap-2">
                   <Zap className="w-4 h-4 text-indigo-400 shrink-0" />
-                  <span>Custom API Key for Swagger / API Access</span>
+                  <span>Unlimited Batch Playlist & 4K Downloads</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <Zap className="w-4 h-4 text-indigo-400 shrink-0" />
-                  <span>Batch Image & PDF Processing (100MB+)</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Zap className="w-4 h-4 text-indigo-400 shrink-0" />
-                  <span>Branded IRD Nepal Invoices & PDF Export</span>
+                  <span>Unlimited Disposable Inboxes & OTPs</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
-                  <span>Priority Support & Verified Workspaces</span>
+                  <span>Custom Invoices with Nepal IRD VAT & PAN</span>
                 </li>
               </ul>
             </div>
 
-            <div>
-              {/* Local Payment Badges */}
-              <div className="mt-6 pt-4 border-t border-[#222631]">
-                <div className="text-[11px] text-slate-400 font-medium mb-2">Supported Payment Gateways in Nepal:</div>
-                <div className="flex flex-wrap gap-2 text-xs">
-                  <span className="px-2 py-0.5 rounded bg-emerald-950/60 text-emerald-400 border border-emerald-800/60 font-semibold">eSewa</span>
-                  <span className="px-2 py-0.5 rounded bg-purple-950/60 text-purple-400 border border-purple-800/60 font-semibold">Khalti</span>
-                  <span className="px-2 py-0.5 rounded bg-rose-950/60 text-rose-400 border border-rose-800/60 font-semibold">FonePay</span>
-                  <span className="px-2 py-0.5 rounded bg-blue-950/60 text-blue-400 border border-blue-800/60 font-semibold">ConnectIPS</span>
-                  <span className="px-2 py-0.5 rounded bg-[#181b22] text-slate-300 font-semibold border border-[#222631]">Cards</span>
-                </div>
-              </div>
-
-              <button
-                onClick={handleSimulateUpgrade}
-                className="mt-5 w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm shadow-md transition-all transform active:scale-95 cursor-pointer"
-              >
-                Upgrade to Pro (NPR 499/mo)
-              </button>
-            </div>
+            <button
+              onClick={handleSimulateUpgrade}
+              className="mt-8 w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-bold shadow-lg shadow-indigo-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <Crown className="w-4 h-4 text-amber-300" />
+              <span>{isPro ? 'Pro Active (Click to Re-activate)' : 'Activate Pro Membership'}</span>
+            </button>
           </div>
         </div>
       </div>
