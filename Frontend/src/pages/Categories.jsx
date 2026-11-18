@@ -2,7 +2,7 @@ import React from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { CATEGORIES, TOOLS_LIST } from '../data/toolsData';
 import ToolCard from '../components/ToolCard';
-import { Layers, ArrowLeft } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { playPopSound } from '../utils/soundEffects';
 
 export default function Categories() {
