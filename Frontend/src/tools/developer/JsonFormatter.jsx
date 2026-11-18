@@ -21,28 +21,36 @@ const SAMPLE_JSON = `{
 export default function JsonFormatter({ onShowToast }) {
   const [inputJson, setInputJson] = useState(SAMPLE_JSON);
   const [outputJson, setOutputJson] = useState('');
+  const [minifiedJson, setMinifiedJson] = useState('');
   const [errorInfo, setErrorInfo] = useState(null);
   const [stats, setStats] = useState(null);
+  const [copiedMinified, setCopiedMinified] = useState(false);
 
   const formatJson = (indentSpaces = 2) => {
     setErrorInfo(null);
     try {
       const parsed = JSON.parse(inputJson);
       const formatted = JSON.stringify(parsed, null, indentSpaces);
+      const minified = JSON.stringify(parsed);
       setOutputJson(formatted);
+      setMinifiedJson(minified);
 
-      // Compute statistics
       const keysCount = (inputJson.match(/"[^"]+"\s*:/g) || []).length;
       const sizeBytes = new Blob([formatted]).size;
+      const minifiedSize = new Blob([minified]).size;
+      const savedPercent = Math.round(((sizeBytes - minifiedSize) / sizeBytes) * 100);
       setStats({
         keysCount,
         sizeBytes,
+        minifiedSize,
+        savedPercent: savedPercent > 0 ? savedPercent : 0,
         lines: formatted.split('\n').length
       });
       if (onShowToast) onShowToast('JSON formatted successfully!');
     } catch (err) {
       setErrorInfo(err.message);
       setOutputJson('');
+      setMinifiedJson('');
       setStats(null);
     }
   };
@@ -53,6 +61,7 @@ export default function JsonFormatter({ onShowToast }) {
       const parsed = JSON.parse(inputJson);
       const minified = JSON.stringify(parsed);
       setOutputJson(minified);
+      setMinifiedJson(minified);
 
       const originalSize = new Blob([inputJson]).size;
       const minifiedSize = new Blob([minified]).size;
@@ -61,13 +70,15 @@ export default function JsonFormatter({ onShowToast }) {
       setStats({
         keysCount: (inputJson.match(/"[^"]+"\s*:/g) || []).length,
         sizeBytes: minifiedSize,
-        lines: 1,
-        savedPercent: savedPercent > 0 ? savedPercent : 0
+        minifiedSize,
+        savedPercent: savedPercent > 0 ? savedPercent : 0,
+        lines: 1
       });
       if (onShowToast) onShowToast(`Minified! Reduced size by ${savedPercent > 0 ? savedPercent : 0}%`);
     } catch (err) {
       setErrorInfo(err.message);
       setOutputJson('');
+      setMinifiedJson('');
       setStats(null);
     }
   };
@@ -76,6 +87,23 @@ export default function JsonFormatter({ onShowToast }) {
     if (!outputJson && !inputJson) return;
     navigator.clipboard.writeText(outputJson || inputJson);
     if (onShowToast) onShowToast('Copied JSON to clipboard!');
+  };
+
+  const handleCopyMinified = () => {
+    let min = minifiedJson;
+    if (!min) {
+      try {
+        min = JSON.stringify(JSON.parse(inputJson));
+        setMinifiedJson(min);
+      } catch {
+        if (onShowToast) onShowToast('Invalid JSON — fix errors first.');
+        return;
+      }
+    }
+    navigator.clipboard.writeText(min);
+    setCopiedMinified(true);
+    setTimeout(() => setCopiedMinified(false), 1800);
+    if (onShowToast) onShowToast('Copied minified JSON!');
   };
 
   const handleDownload = () => {
@@ -115,7 +143,19 @@ export default function JsonFormatter({ onShowToast }) {
             Minify JSON
           </button>
           <button
-            onClick={() => { setInputJson(SAMPLE_JSON); setOutputJson(''); setErrorInfo(null); }}
+            onClick={handleCopyMinified}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all ${
+              copiedMinified
+                ? 'bg-emerald-600 text-white'
+                : 'bg-slate-800 hover:bg-slate-700 text-slate-200'
+            }`}
+            title="Copy minified (single-line) JSON"
+          >
+            {copiedMinified ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+            Copy Minified
+          </button>
+          <button
+            onClick={() => { setInputJson(SAMPLE_JSON); setOutputJson(''); setMinifiedJson(''); setErrorInfo(null); setStats(null); }}
             className="px-3 py-1.5 rounded-xl bg-slate-800/60 hover:bg-slate-800 text-slate-400 hover:text-slate-200 text-xs transition-colors"
           >
             Load Sample
@@ -138,7 +178,7 @@ export default function JsonFormatter({ onShowToast }) {
             <Download className="w-4 h-4" />
           </button>
           <button
-            onClick={() => { setInputJson(''); setOutputJson(''); setErrorInfo(null); }}
+            onClick={() => { setInputJson(''); setOutputJson(''); setMinifiedJson(''); setErrorInfo(null); setStats(null); }}
             className="p-2 rounded-xl bg-slate-800 hover:bg-rose-900/40 text-slate-400 hover:text-rose-400 transition-colors"
             title="Clear all"
           >
@@ -146,6 +186,21 @@ export default function JsonFormatter({ onShowToast }) {
           </button>
         </div>
       </div>
+
+      {/* Stats Bar */}
+      {stats && (
+        <div className="flex flex-wrap items-center gap-4 px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-400">
+          <span>Keys: <strong className="text-slate-200">{stats.keysCount}</strong></span>
+          <span>Lines: <strong className="text-slate-200">{stats.lines}</strong></span>
+          <span>Size: <strong className="text-slate-200">{stats.sizeBytes} bytes</strong></span>
+          {stats.minifiedSize && stats.minifiedSize !== stats.sizeBytes && (
+            <span>Minified: <strong className="text-emerald-400">{stats.minifiedSize} bytes</strong></span>
+          )}
+          {stats.savedPercent > 0 && (
+            <span className="text-emerald-400 font-semibold">↓ {stats.savedPercent}% smaller minified</span>
+          )}
+        </div>
+      )}
 
       {/* Error Banner */}
       {errorInfo && (
