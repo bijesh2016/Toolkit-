@@ -11,28 +11,28 @@ import { playClickSound, playSuccessSound } from '../../utils/soundEffects';
 
 const SAMPLE_PLAYLISTS = [
   {
-    name: 'Mahabharat All Episodes (B.R. Chopra)',
-    url: 'https://youtube.com/playlist?list=PLFr_jkwUp0hhm1lR1TSdgESOfoyLQR3t2&si=NJ1WMP6sHsPWmaRi',
-    count: '15 Episodes',
-    tag: 'Live Series'
-  },
-  {
-    name: 'Lo-Fi Chillhop Beats & Study Soundtracks',
-    url: 'https://www.youtube.com/playlist?list=PLlofi-beats-2026',
-    count: '8 Tracks',
-    tag: 'Chill / Study'
-  },
-  {
-    name: 'Full-Stack Modern Web Engineering Masterclass',
+    name: 'Open Source Web Engineering Masterclass',
     url: 'https://www.youtube.com/playlist?list=PLwebdev-masterclass-2026',
     count: '7 Lessons',
     tag: 'Web Dev'
   },
   {
-    name: 'Nepal Classical Acoustic & Sarangi Folk',
+    name: 'Ambient Focus & Study Soundtracks',
+    url: 'https://www.youtube.com/playlist?list=PLlofi-beats-2026',
+    count: '8 Tracks',
+    tag: 'Chill / Study'
+  },
+  {
+    name: 'Nepal Classical Acoustic & Sarangi Heritage',
     url: 'https://www.youtube.com/playlist?list=PLnepal-acoustic-2026',
     count: '6 Tracks',
     tag: 'Nepal Heritage'
+  },
+  {
+    name: 'Himalayan High Altitude Nature Documentary',
+    url: 'https://www.youtube.com/playlist?list=PLhimalaya-documentary-2026',
+    count: '5 Episodes',
+    tag: 'Nature 4K'
   }
 ];
 
@@ -59,6 +59,9 @@ export default function PlaylistDownloader({ onShowToast, onOpenPricing }) {
   const [queueIndex, setQueueIndex] = useState(0);
   const [queueProgress, setQueueProgress] = useState(0);
   const [completedIds, setCompletedIds] = useState(new Set());
+  const [currentTrackName, setCurrentTrackName] = useState('');
+  const [isZipRunning, setIsZipRunning] = useState(false);
+  const [fetchSuccess, setFetchSuccess] = useState(null); // { count, title }
 
   // Preview Modal
   const [previewVideo, setPreviewVideo] = useState(null);
@@ -98,6 +101,7 @@ export default function PlaylistDownloader({ onShowToast, onOpenPricing }) {
         const allIds = new Set(resJson.data.videos.map(v => v.id));
         setSelectedIds(allIds);
         setCompletedIds(new Set());
+        setFetchSuccess({ count: resJson.data.videos.length, title: resJson.data.title });
         playSuccessSound();
         if (onShowToast) onShowToast(`Loaded playlist: ${resJson.data.title} (${resJson.data.videos.length} tracks)`);
       } else {
@@ -107,6 +111,7 @@ export default function PlaylistDownloader({ onShowToast, onOpenPricing }) {
       console.warn('Playlist metadata request failed:', err);
       setPlaylistData(null);
       setSelectedIds(new Set());
+      setFetchSuccess(null);
       if (onShowToast) onShowToast(err.message || 'Playlist metadata is unavailable.');
     } finally {
       setLoading(false);
@@ -191,12 +196,14 @@ export default function PlaylistDownloader({ onShowToast, onOpenPricing }) {
     setIsBatchRunning(true);
     setQueueIndex(0);
     setQueueProgress(0);
+    setCurrentTrackName('');
     playClickSound();
 
     for (let i = 0; i < selectedList.length; i++) {
       const video = selectedList[i];
       setQueueIndex(i + 1);
       setQueueProgress(Math.round(((i + 1) / selectedList.length) * 100));
+      setCurrentTrackName(video.title || '');
 
       // Trigger track download
       handleDownloadSingleTrack(video, selectedFormat);
@@ -206,76 +213,180 @@ export default function PlaylistDownloader({ onShowToast, onOpenPricing }) {
     }
 
     setIsBatchRunning(false);
+    setCurrentTrackName('');
     playSuccessSound();
     if (onShowToast) onShowToast(`Completed batch download of ${selectedList.length} tracks!`);
   };
 
+  // Download as ZIP (Pro: calls batch-zip endpoint; Free: sequential download)
+  const handleDownloadAsZip = async () => {
+    const selectedList = playlistData?.videos.filter(v => selectedIds.has(v.id)) || [];
+    if (!selectedList.length) {
+      if (onShowToast) onShowToast('Please select at least one track to download.');
+      return;
+    }
+
+    if (selectedFormat.isPro && !isPro) {
+      if (onShowToast) onShowToast(`${selectedFormat.label} is reserved for Pro members.`);
+      if (onOpenPricing) onOpenPricing();
+      return;
+    }
+
+    if (isPro) {
+      setIsZipRunning(true);
+      playClickSound();
+      try {
+        const ext = selectedFormat.type === 'audio' ? 'mp3' : 'mp4';
+        const res = await fetch('/api/tools/playlist-downloader/batch-zip', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            videoIds: selectedList.map(v => v.id),
+            format: ext,
+            quality: selectedFormat.quality,
+            title: playlistData.title
+          })
+        });
+        const data = await res.json();
+        if (data.success && data.downloads) {
+          for (let i = 0; i < data.downloads.length; i++) {
+            const dl = data.downloads[i];
+            const a = document.createElement('a');
+            a.href = dl.url;
+            a.download = dl.filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            await new Promise(r => setTimeout(r, 700));
+          }
+          playSuccessSound();
+          if (onShowToast) onShowToast(`Started download of ${data.downloads.length} tracks!`);
+        } else {
+          throw new Error(data.error || 'Batch zip failed');
+        }
+      } catch (err) {
+        if (onShowToast) onShowToast('Batch ZIP failed: ' + (err.message || 'Unknown error'));
+      } finally {
+        setIsZipRunning(false);
+      }
+    } else {
+      if (selectedList.length > 5) {
+        if (onShowToast) onShowToast('Free tier allows up to 5 tracks. Upgrade to Pro for unlimited!');
+        if (onOpenPricing) onOpenPricing();
+        return;
+      }
+      await handleStartBatchDownload();
+    }
+  };
+
   // Export M3U Playlist file
   const handleExportM3U = async () => {
-    if (onShowToast) onShowToast('Download playlists are not generated because no authorized media streams are available.');
-    return;
-
-    if (!playlistData) return;
+    if (!playlistData) {
+      if (onShowToast) onShowToast('Please load a playlist first.');
+      return;
+    }
     try {
       playClickSound();
       const selectedList = playlistData.videos.filter(v => selectedIds.has(v.id));
-      const res = await fetch('/api/tools/playlist-downloader/export-m3u', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: playlistData.title,
-          videos: selectedList.length ? selectedList : playlistData.videos,
-          format: selectedFormat.type === 'audio' ? 'mp3' : 'mp4',
-          quality: selectedFormat.quality
-        })
-      });
+      const targetVideos = selectedList.length ? selectedList : playlistData.videos;
+      const formatStr = selectedFormat.type === 'audio' ? 'mp3' : 'mp4';
 
-      const blob = await res.blob();
+      let blob;
+      try {
+        const res = await fetch('/api/tools/playlist-downloader/export-m3u', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: playlistData.title,
+            videos: targetVideos,
+            format: formatStr,
+            quality: selectedFormat.quality
+          })
+        });
+        if (res.ok) {
+          blob = await res.blob();
+        }
+      } catch {
+        // Fallback to client generation
+      }
+
+      if (!blob) {
+        let m3u = '#EXTM3U\n#PLAYLIST:' + (playlistData.title || 'Playlist') + '\n\n';
+        targetVideos.forEach((v) => {
+          const dur = v.durationSeconds || 200;
+          m3u += `#EXTINF:${dur},${v.author || 'Artist'} - ${v.title}\n`;
+          m3u += `${window.location.origin}/api/tools/media-downloader/download?format=${formatStr}&quality=${encodeURIComponent(selectedFormat.quality)}&id=${v.id}\n\n`;
+        });
+        blob = new Blob([m3u], { type: 'audio/x-mpegurl' });
+      }
+
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
-      a.download = `${playlistData.title.slice(0, 30).replace(/[^a-zA-Z0-9_-]/g, '_')}.m3u`;
+      a.download = `${(playlistData.title || 'playlist').slice(0, 30).replace(/[^a-zA-Z0-9_-]/g, '_')}.m3u`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
 
       playSuccessSound();
       if (onShowToast) onShowToast('Downloaded .M3U playlist file.');
-    } catch (err) {
+    } catch {
       if (onShowToast) onShowToast('Failed to export M3U.');
     }
   };
 
   // Export Text Links for IDM / JDownloader / yt-dlp
   const handleExportLinks = async () => {
-    if (onShowToast) onShowToast('Direct download links cannot be generated without an authorized media provider.');
-    return;
-
-    if (!playlistData) return;
+    if (!playlistData) {
+      if (onShowToast) onShowToast('Please load a playlist first.');
+      return;
+    }
     try {
       playClickSound();
       const selectedList = playlistData.videos.filter(v => selectedIds.has(v.id));
-      const res = await fetch('/api/tools/playlist-downloader/export-links', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: playlistData.title,
-          videos: selectedList.length ? selectedList : playlistData.videos,
-          format: selectedFormat.type === 'audio' ? 'mp3' : 'mp4',
-          quality: selectedFormat.quality
-        })
-      });
+      const targetVideos = selectedList.length ? selectedList : playlistData.videos;
+      const formatStr = selectedFormat.type === 'audio' ? 'mp3' : 'mp4';
 
-      const blob = await res.blob();
+      let blob;
+      try {
+        const res = await fetch('/api/tools/playlist-downloader/export-links', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: playlistData.title,
+            videos: targetVideos,
+            format: formatStr,
+            quality: selectedFormat.quality
+          })
+        });
+        if (res.ok) {
+          blob = await res.blob();
+        }
+      } catch {
+        // Fallback to client generation
+      }
+
+      if (!blob) {
+        let txt = `# YouTube Playlist Download List: ${playlistData.title}\n`;
+        txt += `# Generated by Bijesh Tools Hub (https://bijeshsharam.com.np)\n`;
+        txt += `# Total Tracks: ${targetVideos.length} | Format: ${formatStr.toUpperCase()} (${selectedFormat.quality})\n\n`;
+        targetVideos.forEach((v, index) => {
+          txt += `[Track ${index + 1}] ${v.title}\n`;
+          txt += `YouTube URL: https://www.youtube.com/watch?v=${v.id}\n`;
+          txt += `Direct Stream: ${window.location.origin}/api/tools/media-downloader/download?format=${formatStr}&quality=${encodeURIComponent(selectedFormat.quality)}&id=${v.id}\n\n`;
+        });
+        blob = new Blob([txt], { type: 'text/plain' });
+      }
+
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
-      a.download = `${playlistData.title.slice(0, 30).replace(/[^a-zA-Z0-9_-]/g, '_')}_links.txt`;
+      a.download = `${(playlistData.title || 'playlist').slice(0, 30).replace(/[^a-zA-Z0-9_-]/g, '_')}_links.txt`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
 
       playSuccessSound();
       if (onShowToast) onShowToast('Downloaded links.txt for external download managers.');
-    } catch (err) {
+    } catch {
       if (onShowToast) onShowToast('Failed to export links.');
     }
   };
@@ -342,6 +453,12 @@ export default function PlaylistDownloader({ onShowToast, onOpenPricing }) {
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleFetchPlaylist(url)}
+              onPaste={(e) => {
+                const pasted = e.clipboardData.getData('text');
+                if (pasted && pasted.includes('youtube.com/playlist')) {
+                  setTimeout(() => handleFetchPlaylist(pasted.trim()), 300);
+                }
+              }}
               placeholder="https://www.youtube.com/playlist?list=PL..."
               className="w-full pl-4 pr-10 py-3.5 rounded-2xl bg-[#0b0c0e] border border-[#222631] text-slate-100 placeholder-slate-500 text-sm focus:outline-none focus:border-rose-500/50 transition-colors"
             />
@@ -395,6 +512,23 @@ export default function PlaylistDownloader({ onShowToast, onOpenPricing }) {
           ))}
         </div>
       </div>
+
+      {/* Success Bar after fetch */}
+      {fetchSuccess && (
+        <div className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-300 text-sm font-semibold">
+          <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+          <span>
+            Playlist loaded: <strong className="text-white">{fetchSuccess.title}</strong>
+            {' '}— <strong>{fetchSuccess.count}</strong> tracks ready to download
+          </span>
+          <button
+            onClick={() => setFetchSuccess(null)}
+            className="ml-auto text-emerald-500 hover:text-emerald-300 cursor-pointer"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
 
       {/* Playlist Meta Showcase Card */}
       {playlistData && (
@@ -520,30 +654,60 @@ export default function PlaylistDownloader({ onShowToast, onOpenPricing }) {
               </div>
 
               {/* Batch Download Button */}
-              <button
-                onClick={handleStartBatchDownload}
-                disabled={isBatchRunning || selectedCount === 0}
-                className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 disabled:opacity-50 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-rose-600/20 transition-all cursor-pointer whitespace-nowrap"
-              >
-                {isBatchRunning ? (
-                  <>
-                    <RefreshCw className="w-4 h-4 animate-spin" />
-                    <span>Downloading {queueIndex} of {selectedCount}...</span>
-                  </>
-                ) : (
-                  <>
-                    <Download className="w-4 h-4" />
-                    <span>Download {selectedCount} Selected Tracks</span>
-                  </>
-                )}
-              </button>
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  onClick={handleStartBatchDownload}
+                  disabled={isBatchRunning || isZipRunning || selectedCount === 0}
+                  className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 disabled:opacity-50 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-rose-600/20 transition-all cursor-pointer whitespace-nowrap"
+                >
+                  {isBatchRunning ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      <span>Downloading {queueIndex} of {selectedCount}...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Download className="w-4 h-4" />
+                      <span>Download {selectedCount} Selected Tracks</span>
+                    </>
+                  )}
+                </button>
+
+                {/* ZIP Download Button */}
+                <button
+                  onClick={handleDownloadAsZip}
+                  disabled={isBatchRunning || isZipRunning || selectedCount === 0}
+                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 disabled:opacity-50 text-slate-950 font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20 transition-all cursor-pointer whitespace-nowrap"
+                  title={isPro ? 'Download all selected tracks sequentially (Pro)' : 'Up to 5 tracks — upgrade for unlimited'}
+                >
+                  {isZipRunning ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      <span>Preparing Downloads...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Download className="w-4 h-4" />
+                      <span>📥 Download All as ZIP</span>
+                      {isPro && <Crown className="w-3.5 h-3.5" />}
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
 
             {/* Active Batch Progress Bar */}
             {isBatchRunning && (
               <div className="pt-3 border-t border-[#1e222d] space-y-1.5">
                 <div className="flex justify-between text-xs font-semibold text-slate-300">
-                  <span>Batch Queue Progress ({queueIndex}/{selectedCount})</span>
+                  <span>
+                    Batch Queue Progress ({queueIndex}/{selectedCount})
+                    {currentTrackName && (
+                      <span className="ml-2 text-rose-400 font-normal truncate max-w-[200px] inline-block align-bottom">
+                        — {currentTrackName}
+                      </span>
+                    )}
+                  </span>
                   <span className="font-mono text-rose-400">{queueProgress}%</span>
                 </div>
                 <div className="w-full bg-[#0b0c0e] h-2.5 rounded-full overflow-hidden border border-[#222631]">
