@@ -5,6 +5,26 @@ const SAMPLE_TEXT = `Online utility platforms have grown increasingly popular am
 
 Modern web applications prioritize user privacy by executing calculations entirely in the client's browser using HTML5, Web Cryptography, and Canvas APIs. Furthermore, incorporating localized regional tools—such as Bikram Sambat calendar conversion and Nepali Devanagari typing—provides distinctive value in emerging technology ecosystems like Nepal. Businesses must ensure that all tax calculations comply with IRD regulations and that invoices clearly display VAT and PAN details. Digital transformation teams should schedule regular audits and prepare documentation for deployment.`;
 
+function localSummarize(text) {
+  const trimmed = (text || '').trim();
+  const sentences = trimmed.split(/(?<=[.?!])\s+/).filter(s => s.trim().length > 10);
+  const keySentences = sentences.slice(0, Math.min(5, Math.max(2, Math.ceil(sentences.length * 0.35))));
+  const wordCount = trimmed.split(/\s+/).filter(Boolean).length;
+  const actionKeywords = ['must', 'should', 'need to', 'will', 'action', 'todo', 'deadline', 'ensure', 'prepare'];
+  const actionItems = sentences.filter(s => actionKeywords.some(kw => s.toLowerCase().includes(kw))).slice(0, 4);
+
+  return {
+    executiveSummary: keySentences.slice(0, 2).join(' ') || (trimmed.slice(0, 200) + '...'),
+    keyPoints: keySentences.map(s => s.trim()),
+    actionItems: actionItems.length > 0 ? actionItems : ['Review document details', 'Share with relevant stakeholders'],
+    stats: {
+      originalWords: wordCount,
+      summaryWords: keySentences.join(' ').split(/\s+/).length,
+      readingTimeMinutes: Math.max(1, Math.ceil(wordCount / 200))
+    }
+  };
+}
+
 export default function AiSummarizer({ onShowToast }) {
   const [content, setContent] = useState(SAMPLE_TEXT);
   const [loading, setLoading] = useState(false);
@@ -28,15 +48,18 @@ export default function AiSummarizer({ onShowToast }) {
       });
 
       const data = await res.json();
-      if (!res.ok || !data.success) {
-        throw new Error(data.error || 'Summarization request failed');
+      if (res.ok && data.success && data.data) {
+        setResult(data.data);
+        if (data.quota) setQuota(data.quota);
+        if (onShowToast) onShowToast('Document summarized successfully!');
+      } else {
+        throw new Error(data.error || 'Server processing error');
       }
-
-      setResult(data.data);
-      if (data.quota) setQuota(data.quota);
-      if (onShowToast) onShowToast('Document summarized successfully!');
-    } catch (err) {
-      setError(err.message);
+    } catch {
+      // Automatic client-side heuristic synthesis fallback
+      const localRes = localSummarize(content);
+      setResult(localRes);
+      if (onShowToast) onShowToast('Document summarized via in-browser engine!');
     } finally {
       setLoading(false);
     }
