@@ -1,18 +1,35 @@
-import React, { useState } from 'react';
-import { MapPin, Search, Copy, Check, Building2, Compass } from 'lucide-react';
-import { NEPAL_PROVINCES } from '../../../../Backend/src/utils/nepalData.js';
+import React, { useState, useEffect } from 'react';
+import { MapPin, Search, Copy, Check, Building2, Compass, Sparkles, RefreshCw } from 'lucide-react';
+import { NEPAL_PROVINCES as DEFAULT_PROVINCES } from '../../utils/nepalData';
 
 export default function NepalLocations({ onShowToast }) {
+  const [provincesData, setProvincesData] = useState(DEFAULT_PROVINCES);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedProvince, setSelectedProvince] = useState('all');
+  const [copiedCode, setCopiedCode] = useState(null);
 
-  const filteredProvinces = NEPAL_PROVINCES.filter(province => {
+  // Attempt to fetch fresh province data from backend API
+  useEffect(() => {
+    fetch('/api/nepal/provinces')
+      .then(res => res.json())
+      .then(json => {
+        if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+          setProvincesData(json.data);
+        }
+      })
+      .catch(() => {
+        // Fallback remains DEFAULT_PROVINCES
+      });
+  }, []);
+
+  const filteredProvinces = provincesData.filter(province => {
     if (selectedProvince !== 'all' && province.id !== Number(selectedProvince)) {
       return false;
     }
     return true;
   }).map(province => {
-    const q = searchTerm.toLowerCase();
+    const q = searchTerm.toLowerCase().trim();
+    if (!q) return province;
     const matchingDistricts = province.districts.filter(d =>
       d.name.toLowerCase().includes(q) ||
       d.hq.toLowerCase().includes(q) ||
@@ -26,13 +43,32 @@ export default function NepalLocations({ onShowToast }) {
 
   const handleCopyCode = (code, name) => {
     navigator.clipboard.writeText(code);
+    setCopiedCode(code);
     if (onShowToast) onShowToast(`Copied postal code ${code} for ${name}!`);
+    setTimeout(() => setCopiedCode(null), 2000);
   };
+
+  const totalDistrictsCount = provincesData.reduce((acc, p) => acc + (p.districts?.length || 0), 0);
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
       {/* Search and Filter */}
       <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 shadow-xl">
+        <div className="flex items-center justify-between pb-4 border-b border-slate-800 mb-4">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2.5 rounded-xl bg-rose-500/10 text-rose-400">
+              <MapPin className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="font-bold text-white text-base">Nepal 7 Provinces & 77 Districts Directory</h3>
+              <p className="text-xs text-slate-400">Official capitals, administrative headquarters, and postal zip codes</p>
+            </div>
+          </div>
+          <span className="hidden sm:inline-flex px-3 py-1 rounded-full text-xs font-semibold bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">
+            {totalDistrictsCount} Districts • 7 Provinces
+          </span>
+        </div>
+
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="relative flex-1">
             <Search className="w-5 h-5 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
@@ -51,7 +87,7 @@ export default function NepalLocations({ onShowToast }) {
             className="bg-slate-950 border border-slate-700 rounded-2xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500"
           >
             <option value="all">All 7 Provinces (सबै प्रदेशहरू)</option>
-            {NEPAL_PROVINCES.map(p => (
+            {provincesData.map(p => (
               <option key={p.id} value={p.id}>{p.name} ({p.nameNp})</option>
             ))}
           </select>
@@ -96,11 +132,15 @@ export default function NepalLocations({ onShowToast }) {
 
                   <button
                     onClick={() => handleCopyCode(dist.postalCode, dist.name)}
-                    className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-indigo-600 text-xs font-mono text-slate-300 hover:text-white border border-slate-800 transition-colors"
+                    className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-indigo-600 text-xs font-mono text-slate-300 hover:text-white border border-slate-800 transition-colors cursor-pointer"
                     title="Click to copy postal code"
                   >
                     <span>{dist.postalCode}</span>
-                    <Copy className="w-3 h-3 text-slate-500 group-hover:text-white" />
+                    {copiedCode === dist.postalCode ? (
+                      <Check className="w-3 h-3 text-emerald-400" />
+                    ) : (
+                      <Copy className="w-3 h-3 text-slate-500 group-hover:text-white" />
+                    )}
                   </button>
                 </div>
               ))}
