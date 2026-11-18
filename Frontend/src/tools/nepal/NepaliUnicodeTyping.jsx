@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { 
   Keyboard, Copy, Download, Trash2, Check, Sparkles, 
-  ArrowRightLeft, BookOpen, HelpCircle, FileText, RefreshCw 
+  ArrowRightLeft, BookOpen, HelpCircle, FileText 
 } from 'lucide-react';
 import { 
   romanizedToNepali, 
@@ -9,7 +9,7 @@ import {
   unicodeToPreeti, 
   transliterateWord 
 } from '../../utils/nepaliTransliterate';
-import { playClickSound, playSuccessSound } from '../../utils/soundEffects';
+import { playClickSound } from '../../utils/soundEffects';
 
 export default function NepaliUnicodeTyping({ onShowToast }) {
   // Mode selection: 'romanized' | 'preetiToUni' | 'uniToPreeti' | 'keyboard'
@@ -36,26 +36,23 @@ export default function NepaliUnicodeTyping({ onShowToast }) {
   // References
   const inPlaceRef = useRef(null);
 
-  // Real-time Romanized conversion
-  useEffect(() => {
-    if (activeTab === 'romanized' && !inPlaceMode) {
-      setUnicodeOutput(romanizedToNepali(romanInput));
+  // Event-driven real-time conversions
+  const handleRomanChange = (val) => {
+    setRomanInput(val);
+    if (!inPlaceMode) {
+      setUnicodeOutput(romanizedToNepali(val));
     }
-  }, [romanInput, activeTab, inPlaceMode]);
+  };
 
-  // Real-time Preeti to Unicode conversion
-  useEffect(() => {
-    if (activeTab === 'preetiToUni') {
-      setPreetiOutput(preetiToUnicode(preetiInput));
-    }
-  }, [preetiInput, activeTab]);
+  const handlePreetiChange = (val) => {
+    setPreetiInput(val);
+    setPreetiOutput(preetiToUnicode(val));
+  };
 
-  // Real-time Unicode to Preeti conversion
-  useEffect(() => {
-    if (activeTab === 'uniToPreeti') {
-      setUniPreetiOutput(unicodeToPreeti(uniPreetiInput));
-    }
-  }, [uniPreetiInput, activeTab]);
+  const handleUniPreetiChange = (val) => {
+    setUniPreetiInput(val);
+    setUniPreetiOutput(unicodeToPreeti(val));
+  };
 
   // Handle in-place space-triggered typing
   const handleInPlaceKeyDown = (e) => {
@@ -145,11 +142,14 @@ export default function NepaliUnicodeTyping({ onShowToast }) {
   const loadSample = (sampleType) => {
     playClickSound();
     if (sampleType === 'romanized') {
-      setRomanInput('namaste! mero desh nepal ho. kathmandu ra pokhara dherai ramro cha. aaja tapailai kasto cha?');
+      const text = 'namaste! mero desh nepal ho. kathmandu ra pokhara dherai ramro cha. aaja tapailai kasto cha?';
+      handleRomanChange(text);
     } else if (sampleType === 'preeti') {
-      setPreetiInput('g]kfn ;\'Gb/ b]z xf] . s7df8f}+ g]kfnsf] /fhwfgL xf] . zdf{ / >]i7 g]kfndf a:5g\\ .');
+      const text = "g]kfn ;'Gb/ b]z xf] . s7df8f}+ g]kfnsf] /fhwfgL xf] . zdf{ / >]i7 g]kfndf a:5g\\ .";
+      handlePreetiChange(text);
     } else if (sampleType === 'unicode') {
-      setUniPreetiInput('नेपाल सुन्दर देश हो। काठमाडौँ नेपालको राजधानी हो। बिजेश शर्मा tools hub चलाउँदै छन्।');
+      const text = 'नेपाल सुन्दर देश हो। काठमाडौँ नेपालको राजधानी हो। बिजेश शर्मा tools hub चलाउँदै छन्।';
+      handleUniPreetiChange(text);
     }
   };
 
@@ -366,7 +366,7 @@ export default function NepaliUnicodeTyping({ onShowToast }) {
                 </div>
                 <textarea
                   value={romanInput}
-                  onChange={(e) => setRomanInput(e.target.value)}
+                  onChange={(e) => handleRomanChange(e.target.value)}
                   placeholder="Type English phonetics here... (try: mero naam bijesh sharma ho. ma nepali hu.)"
                   className="flex-1 w-full bg-transparent text-slate-100 placeholder-slate-600 resize-none py-3 focus:outline-none text-sm leading-relaxed"
                 />
@@ -496,7 +496,7 @@ export default function NepaliUnicodeTyping({ onShowToast }) {
               </div>
               <textarea
                 value={preetiInput}
-                onChange={(e) => setPreetiInput(e.target.value)}
+                onChange={(e) => handlePreetiChange(e.target.value)}
                 placeholder="Paste Preeti or Kantipur ASCII text here... (e.g. g]kfn ;'Gb/ b]z xf] .)"
                 className="flex-1 w-full bg-transparent text-slate-100 placeholder-slate-600 resize-none py-3 focus:outline-none text-sm font-mono leading-relaxed"
               />
@@ -580,7 +580,7 @@ export default function NepaliUnicodeTyping({ onShowToast }) {
               </div>
               <textarea
                 value={uniPreetiInput}
-                onChange={(e) => setUniPreetiInput(e.target.value)}
+                onChange={(e) => handleUniPreetiChange(e.target.value)}
                 placeholder="यहाँ नेपाली युनिकोड टाइप गर्नुहोस् वा पेस्ट गर्नुहोस्..."
                 className="flex-1 w-full bg-transparent text-white placeholder-slate-600 resize-none py-3 focus:outline-none text-base font-devanagari leading-relaxed"
               />
