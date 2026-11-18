@@ -1,6 +1,6 @@
 export const CATEGORIES = [
   { id: 'all', name: 'All Tools', icon: 'Sparkles', color: 'text-indigo-400' },
-  { id: 'nepal', name: 'Nepal Suite', icon: 'Flag', color: 'text-rose-400', count: 6 },
+  { id: 'nepal', name: 'Nepal Suite', icon: 'Flag', color: 'text-rose-400', count: 7 },
   { id: 'developer', name: 'Developer Tools', icon: 'Code', color: 'text-cyan-400', count: 7 },
   { id: 'document', name: 'Document & PDF', icon: 'FileText', color: 'text-amber-400', count: 6 },
   { id: 'image', name: 'Image & Design', icon: 'Image', color: 'text-emerald-400', count: 4 },
@@ -22,6 +22,17 @@ export const TOOLS_LIST = [
     description: 'Universal Bikram Sambat (BS) to Gregorian (AD) and AD to BS calendar converter with Devanagari weekdays, zodiac, and seasons.',
     features: ['Universal 1950 - 2100+ BS', 'Devanagari day & month output', 'Zodiac & Ritu season calculation'],
     route: '/tools/bs-ad-converter',
+    popular: true
+  },
+  {
+    id: 'nepali-date-age-toolkit',
+    name: 'Nepali Date & Age Toolkit',
+    category: 'nepal',
+    icon: 'CalendarDays',
+    badge: 'Nepal Special',
+    description: 'Calculate age and date differences, see birth dates in BS, and convert Nepali dates locally.',
+    features: ['BS birth-date display', 'Exact age and total days', 'Private browser-only calculations'],
+    route: '/tools/nepali-date-age-toolkit',
     popular: true
   },
   {
