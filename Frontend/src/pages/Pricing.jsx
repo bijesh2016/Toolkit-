@@ -1,26 +1,44 @@
-import React, { useState } from 'react';
-import { Check, Zap, Sparkles, ShieldCheck, HelpCircle, Crown } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Check, Zap, Sparkles, ShieldCheck, HelpCircle, Crown, RotateCcw } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { playSuccessSound } from '../utils/soundEffects';
+import { playSuccessSound, playClickSound } from '../utils/soundEffects';
+import { isProMember, setProMember } from '../utils/storage';
 
 export default function Pricing({ onShowToast }) {
   const [billingCycle, setBillingCycle] = useState('monthly');
+  const [isPro, setIsPro] = useState(false);
+
+  useEffect(() => {
+    setIsPro(isProMember());
+    const handleProUpdate = () => setIsPro(isProMember());
+    window.addEventListener('toolshub_pro_updated', handleProUpdate);
+    return () => window.removeEventListener('toolshub_pro_updated', handleProUpdate);
+  }, []);
 
   const handleUpgrade = (tier) => {
-    playSuccessSound();
-    confetti({
-      particleCount: 100,
-      spread: 75,
-      origin: { y: 0.6 }
-    });
-    if (onShowToast) onShowToast(`Activated ${tier} simulation! Instant access granted.`);
+    if (tier === 'Pro' || tier === 'Team') {
+      setProMember(true);
+      setIsPro(true);
+      playSuccessSound();
+      confetti({
+        particleCount: 120,
+        spread: 80,
+        origin: { y: 0.6 }
+      });
+      if (onShowToast) onShowToast(`🎉 Activated ${tier} Membership! Unlimited batch downloads, 4K media, and disposable emails unlocked.`);
+    } else {
+      setProMember(false);
+      setIsPro(false);
+      playClickSound();
+      if (onShowToast) onShowToast('Switched back to Free Tier.');
+    }
   };
 
   const faqs = [
     { q: 'Is the core tools hub completely free?', a: 'Yes! Over 50+ developer, document, calculation, and Nepal localization utilities are 100% free forever without requiring any account registration.' },
     { q: 'Which payment methods are supported in Nepal?', a: 'We support instant local digital wallets including eSewa, Khalti, FonePay, and ConnectIPS, along with international debit/credit cards.' },
     { q: 'Where are my files and tokens processed?', a: 'All file compressions, QR code generations, text differences, and JWT token decodings are processed locally inside your browser sandbox for privacy.' },
-    { q: 'Can I cancel my Pro subscription anytime?', a: 'Yes, subscriptions can be cancelled or paused at any time without any lock-in contracts or hidden fees.' }
+    { q: 'Can I cancel or switch my Pro status anytime?', a: 'Yes, subscriptions can be activated, cancelled or reset at any time with one click.' }
   ];
 
   return (
@@ -35,8 +53,15 @@ export default function Pricing({ onShowToast }) {
           Tools that pay for themselves
         </h1>
         <p className="text-sm sm:text-base text-slate-400 font-sans leading-relaxed">
-          Start free forever. Upgrade when you need unlimited disposable email inboxes, high-speed batch processing, or programmatic Swagger API tokens.
+          Start free forever. Upgrade when you need unlimited disposable email inboxes, high-speed batch playlist downloads, or programmatic Swagger API tokens.
         </p>
+
+        {isPro && (
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs font-bold shadow-lg animate-pulse">
+            <Crown className="w-4 h-4 text-amber-400" />
+            <span>Pro Membership is Currently Active on this Browser</span>
+          </div>
+        )}
       </div>
 
       {/* Pricing Cards */}
@@ -71,10 +96,12 @@ export default function Pricing({ onShowToast }) {
           </div>
 
           <button
-            onClick={() => handleUpgrade('Free Forever')}
-            className="mt-8 w-full py-3 rounded-xl bg-[#181b22] border border-[#222631] hover:border-[#323846] text-slate-300 text-xs font-bold transition-all cursor-pointer"
+            onClick={() => handleUpgrade('Free')}
+            className={`mt-8 w-full py-3 rounded-xl border border-[#222631] text-xs font-bold transition-all cursor-pointer ${
+              !isPro ? 'bg-indigo-600/20 text-indigo-300 border-indigo-500/30' : 'bg-[#181b22] hover:border-[#323846] text-slate-300'
+            }`}
           >
-            Current Plan
+            {!isPro ? '✓ Current Active Plan' : 'Switch to Free Tier'}
           </button>
         </div>
 
@@ -101,11 +128,15 @@ export default function Pricing({ onShowToast }) {
               </li>
               <li className="flex items-center gap-2.5">
                 <Zap className="w-4 h-4 text-indigo-400 shrink-0" />
+                <span>Unlimited Batch Playlist & 4K Media Downloads</span>
+              </li>
+              <li className="flex items-center gap-2.5">
+                <Zap className="w-4 h-4 text-indigo-400 shrink-0" />
                 <span>Dedicated Custom API Key for Swagger Docs</span>
               </li>
               <li className="flex items-center gap-2.5">
                 <Zap className="w-4 h-4 text-indigo-400 shrink-0" />
-                <span>Unlimited AI Assistant & Translator Tokens</span>
+                <span>Unlimited AI Assistant & Code Tokens</span>
               </li>
               <li className="flex items-center gap-2.5">
                 <Zap className="w-4 h-4 text-indigo-400 shrink-0" />
@@ -130,9 +161,10 @@ export default function Pricing({ onShowToast }) {
 
             <button
               onClick={() => handleUpgrade('Pro')}
-              className="mt-5 w-full py-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs sm:text-sm shadow-md transition-all transform active:scale-95 cursor-pointer"
+              className="mt-5 w-full py-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs sm:text-sm shadow-md transition-all transform active:scale-95 cursor-pointer flex items-center justify-center gap-2"
             >
-              Upgrade to Pro (NPR 499)
+              <Crown className="w-4 h-4 text-amber-300" />
+              <span>{isPro ? 'Pro Active (Click to Re-activate)' : 'Upgrade to Pro (NPR 499)'}</span>
             </button>
           </div>
         </div>
@@ -140,52 +172,57 @@ export default function Pricing({ onShowToast }) {
         {/* Team Plan */}
         <div className="p-8 rounded-2xl bg-[#13151b] border border-[#222631] shadow-sm flex flex-col justify-between">
           <div>
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Team & Agency</span>
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Team & Organization</span>
             <div className="font-display text-4xl font-black text-white mt-3">
-              NPR 1,499 <span className="text-xs font-normal text-slate-500 font-mono">/ mo ($14.99)</span>
+              NPR 1,499 <span className="text-xs font-normal text-slate-500 font-mono">/ mo</span>
             </div>
-            <p className="text-xs text-slate-400 mt-2 font-sans">For startups, design agencies, and development teams.</p>
+            <p className="text-xs text-slate-400 mt-2 font-sans">For engineering teams, schools, and growing digital agencies.</p>
 
             <ul className="mt-7 space-y-3.5 text-xs text-slate-300">
               <li className="flex items-center gap-2.5">
-                <Check className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span>Up to 10 Team Member Accounts</span>
+                <Check className="w-4 h-4 text-indigo-400 shrink-0" />
+                <span>Everything in Pro for up to 10 Seats</span>
               </li>
               <li className="flex items-center gap-2.5">
-                <Check className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span>High-Speed Dedicated Proxy Rate Limits</span>
+                <Check className="w-4 h-4 text-indigo-400 shrink-0" />
+                <span>Shared Team Snippets & Templates</span>
               </li>
               <li className="flex items-center gap-2.5">
-                <Check className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span>Custom Team Branding on PDF & Invoices</span>
+                <Check className="w-4 h-4 text-indigo-400 shrink-0" />
+                <span>White-Label Branding on Invoices & Certificates</span>
               </li>
               <li className="flex items-center gap-2.5">
-                <Check className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span>Dedicated Slack & WhatsApp SLA Channel</span>
+                <Check className="w-4 h-4 text-indigo-400 shrink-0" />
+                <span>Dedicated Web Inspection Proxy</span>
               </li>
             </ul>
           </div>
 
           <button
-            onClick={() => handleUpgrade('Team Agency')}
+            onClick={() => handleUpgrade('Team')}
             className="mt-8 w-full py-3 rounded-xl bg-[#181b22] border border-[#222631] hover:border-[#323846] text-slate-300 text-xs font-bold transition-all cursor-pointer"
           >
-            Upgrade to Team
+            {isPro ? 'Team Tier Active' : 'Activate Team Tier'}
           </button>
         </div>
       </div>
 
-      {/* Frequently Asked Questions */}
-      <div className="pt-10 border-t border-[#222631] max-w-4xl mx-auto space-y-6">
-        <h3 className="font-display text-2xl font-black text-white text-center">Frequently Asked Questions</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {faqs.map(faq => (
-            <div key={faq.q} className="p-6 rounded-2xl bg-[#13151b] border border-[#222631] shadow-sm space-y-2">
-              <div className="flex items-start gap-2.5">
-                <HelpCircle className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
-                <h4 className="font-display font-bold text-sm text-white">{faq.q}</h4>
+      {/* FAQ Accordion */}
+      <div className="max-w-3xl mx-auto space-y-6 pt-6">
+        <h3 className="font-display text-xl sm:text-2xl font-bold text-white text-center">
+          Frequently Asked Questions
+        </h3>
+
+        <div className="grid gap-4">
+          {faqs.map((faq, index) => (
+            <div key={index} className="p-5 rounded-2xl bg-[#13151b] border border-[#222631]">
+              <div className="flex items-center gap-2 text-sm font-bold text-white mb-2">
+                <HelpCircle className="w-4 h-4 text-indigo-400 shrink-0" />
+                <span>{faq.q}</span>
               </div>
-              <p className="text-xs text-slate-400 pl-6 leading-relaxed font-sans">{faq.a}</p>
+              <p className="text-xs text-slate-400 leading-relaxed pl-6">
+                {faq.a}
+              </p>
             </div>
           ))}
         </div>
