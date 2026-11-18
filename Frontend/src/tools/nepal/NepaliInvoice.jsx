@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Receipt, Plus, Trash2, Printer, Download, Sparkles } from 'lucide-react';
-import { convertToNprWords } from '../../../../Backend/src/utils/numberToWords.js';
+import { convertToNprWords } from '../../utils/numberToWords';
 
 export default function NepaliInvoice({ onShowToast }) {
   const [businessName, setBusinessName] = useState('Bijesh Solutions Pvt. Ltd.');
