@@ -12,25 +12,25 @@ import { playClickSound, playSuccessSound } from '../../utils/soundEffects';
 
 const SAMPLE_MEDIA = [
   {
-    name: 'Rick Astley - Never Gonna Give You Up',
-    url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-    platform: 'YouTube',
-    tag: 'Official Video'
-  },
-  {
     name: 'Nepal 4K Ultra HD Landscapes & Himalayas',
     url: 'https://www.youtube.com/watch?v=sample-nepal-4k',
     platform: 'YouTube',
     tag: '4K Ultra HD'
   },
   {
-    name: 'TikTok Trending Sound & Creative Reel',
+    name: 'Open Creative Nature Cinematic Showcase',
+    url: 'https://www.youtube.com/watch?v=sample-nature-stream',
+    platform: 'YouTube',
+    tag: 'Cinematic'
+  },
+  {
+    name: 'Creative Sound & Motion Design Clip',
     url: 'https://www.tiktok.com/@creatorspotlight/video/7291847192',
     platform: 'TikTok',
     tag: 'Viral Audio'
   },
   {
-    name: 'Vimeo Cinematic Film Showcase',
+    name: 'Vimeo Independent Film Showcase',
     url: 'https://vimeo.com/76979871',
     platform: 'Vimeo',
     tag: 'Staff Pick'
@@ -38,7 +38,7 @@ const SAMPLE_MEDIA = [
 ];
 
 export default function MediaDownloader({ onShowToast, onOpenPricing }) {
-  const [url, setUrl] = useState('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+  const [url, setUrl] = useState('https://www.youtube.com/watch?v=sample-nepal-4k');
   const [loading, setLoading] = useState(false);
   const [mediaData, setMediaData] = useState(null);
   const [activeTab, setActiveTab] = useState('video'); // 'video' | 'audio' | 'subtitles'
@@ -98,8 +98,8 @@ export default function MediaDownloader({ onShowToast, onOpenPricing }) {
         id: ytId,
         url: targetUrl,
         platform: isYt ? 'YouTube' : 'Web Video Stream',
-        title: isYt ? (ytId === 'dQw4w9WgXcQ' ? 'Rick Astley - Never Gonna Give You Up (Official Music Video)' : 'High Definition Media Stream') : 'Web Video & Audio Stream',
-        author: isYt ? (ytId === 'dQw4w9WgXcQ' ? 'Rick Astley' : 'Media Creator') : 'Content Creator',
+        title: isYt ? 'High Definition Media Stream' : 'Web Video & Audio Stream',
+        author: isYt ? 'Media Channel' : 'Content Creator',
         duration: '3:33',
         durationSeconds: 213,
         views: '1,610,000,000',
@@ -135,7 +135,7 @@ export default function MediaDownloader({ onShowToast, onOpenPricing }) {
 
   // Auto-fetch initial sample on first mount
   useEffect(() => {
-    handleFetchInfo('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+    handleFetchInfo('https://www.youtube.com/watch?v=sample-nepal-4k');
   }, []);
 
   // Handle Download Click
