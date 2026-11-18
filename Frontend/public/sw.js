@@ -30,14 +30,27 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Pass API requests to network
+  // Only cache GET requests
+  if (event.request.method !== 'GET') {
+    return;
+  }
+
+  // Pass API requests directly to network
   if (event.request.url.includes('/api/')) {
     return;
   }
 
   event.respondWith(
     caches.match(event.request).then((cached) => {
-      return cached || fetch(event.request).catch(() => caches.match('/'));
+      return (
+        cached ||
+        fetch(event.request).catch(() => {
+          if (event.request.mode === 'navigate') {
+            return caches.match('/');
+          }
+          return null;
+        })
+      );
     })
   );
 });
