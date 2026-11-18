@@ -248,7 +248,6 @@ export const CANONICAL_WORDS = {
   'madhesh': 'मधेश',
   'bagmati': 'बागमती',
   'gandaki': 'गण्डकी',
-  'lumbini': 'लुम्बिनी',
   'karnali': 'कर्णाली',
   'sudurpashchim': 'सुदूरपश्चिम',
 
