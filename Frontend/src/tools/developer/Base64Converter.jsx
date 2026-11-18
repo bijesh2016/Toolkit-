@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Binary, ArrowRightLeft, Copy, Trash2, Check } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Binary, ArrowRightLeft, Copy, Trash2, Check, Image, Upload } from 'lucide-react';
 
 export default function Base64Converter({ onShowToast }) {
   const [conversionType, setConversionType] = useState('base64'); // 'base64', 'url', 'hex', 'html'
@@ -7,6 +7,9 @@ export default function Base64Converter({ onShowToast }) {
   const [inputVal, setInputVal] = useState('Hello from Bijesh Tools Hub (नेपाल)!');
   const [outputVal, setOutputVal] = useState('');
   const [error, setError] = useState('');
+  const [isDragging, setIsDragging] = useState(false);
+  const [imagePreviewSrc, setImagePreviewSrc] = useState(''); // base64 image to preview
+  const fileInputRef = useRef(null);
 
   const processConversion = (text, type, dir) => {
     setError('');
@@ -25,6 +28,24 @@ export default function Base64Converter({ onShowToast }) {
           // UTF-8 safe base64 decoding
           const decoded = decodeURIComponent(escape(window.atob(text.trim())));
           setOutputVal(decoded);
+          // Check if the base64 is an image data URL
+          if (text.trim().startsWith('data:image')) {
+            setImagePreviewSrc(text.trim());
+          } else {
+            // Try to auto-detect image base64 (no data URL prefix)
+            try {
+              const cleanB64 = text.trim().replace(/\s/g, '');
+              // If it looks like valid base64 and starts with common image magic bytes
+              const decoded2 = atob(cleanB64.split(',').pop());
+              if (decoded2.startsWith('\xFF\xD8') || decoded2.startsWith('\x89PNG') || decoded2.startsWith('GIF8')) {
+                setImagePreviewSrc('data:image/jpeg;base64,' + cleanB64);
+              } else {
+                setImagePreviewSrc('');
+              }
+            } catch {
+              setImagePreviewSrc('');
+            }
+          }
         }
       } else if (type === 'url') {
         if (dir === 'encode') {
@@ -75,6 +96,34 @@ export default function Base64Converter({ onShowToast }) {
     if (!outputVal) return;
     navigator.clipboard.writeText(outputVal);
     if (onShowToast) onShowToast('Copied to clipboard!');
+  };
+
+  // Handle image file → base64
+  const handleImageFile = (file) => {
+    if (!file || !file.type.startsWith('image/')) {
+      if (onShowToast) onShowToast('Please drop an image file (PNG, JPG, GIF, WebP).');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const dataUrl = e.target.result;
+      setConversionType('base64');
+      setDirection('decode');
+      setInputVal(dataUrl);
+      setImagePreviewSrc(dataUrl);
+      setOutputVal(dataUrl.split(',')[1] || '');
+      if (onShowToast) onShowToast(`Image converted: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleDragOver = (e) => { e.preventDefault(); setIsDragging(true); };
+  const handleDragLeave = () => setIsDragging(false);
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files[0];
+    if (file) handleImageFile(file);
   };
 
   return (
@@ -133,12 +182,36 @@ export default function Base64Converter({ onShowToast }) {
         </div>
       )}
 
+      {/* Image Drag-Drop Zone */}
+      <div
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        onClick={() => fileInputRef.current?.click()}
+        className={`flex flex-col items-center justify-center gap-2 p-5 rounded-2xl border-2 border-dashed cursor-pointer transition-all text-xs ${
+          isDragging
+            ? 'border-indigo-500 bg-indigo-500/10 text-indigo-300'
+            : 'border-slate-700 bg-slate-900/50 text-slate-400 hover:border-slate-500 hover:text-slate-300'
+        }`}
+      >
+        <Upload className="w-6 h-6" />
+        <span className="font-semibold">Drop an image here to convert to Base64</span>
+        <span className="text-slate-500">PNG, JPG, GIF, WebP — click to browse</span>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => { if (e.target.files[0]) handleImageFile(e.target.files[0]); }}
+        />
+      </div>
+
       {/* Inputs Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="p-4 rounded-3xl bg-slate-900 border border-slate-800 shadow-xl flex flex-col h-80">
           <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-800 text-xs text-slate-400">
             <span className="font-semibold text-slate-300">Input ({direction.toUpperCase()})</span>
-            <button onClick={() => setInputVal('')} className="hover:text-rose-400 text-slate-500">Clear</button>
+            <button onClick={() => { setInputVal(''); setImagePreviewSrc(''); }} className="hover:text-rose-400 text-slate-500">Clear</button>
           </div>
           <textarea
             value={inputVal}
@@ -166,6 +239,34 @@ export default function Base64Converter({ onShowToast }) {
           />
         </div>
       </div>
+
+      {/* Base64 → Image Preview Panel */}
+      {imagePreviewSrc && (
+        <div className="p-5 rounded-3xl bg-slate-900 border border-slate-800 shadow-xl space-y-3">
+          <div className="flex items-center justify-between text-xs">
+            <span className="font-semibold text-slate-300 flex items-center gap-2">
+              <Image className="w-4 h-4 text-indigo-400" /> Image Preview
+            </span>
+            <button
+              onClick={() => setImagePreviewSrc('')}
+              className="text-slate-500 hover:text-rose-400 text-xs"
+            >
+              Dismiss
+            </button>
+          </div>
+          <div className="flex items-center justify-center rounded-2xl bg-slate-950 border border-slate-800 p-3 overflow-hidden">
+            <img
+              src={imagePreviewSrc}
+              alt="Base64 decoded"
+              className="max-w-full max-h-64 object-contain rounded-xl"
+              onError={() => setImagePreviewSrc('')}
+            />
+          </div>
+          <p className="text-[11px] text-slate-500 text-center">
+            Decoded image preview · Right-click to save
+          </p>
+        </div>
+      )}
     </div>
   );
 }
