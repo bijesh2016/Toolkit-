@@ -54,7 +54,7 @@ export function playPopSound() {
 
     osc.start(now);
     osc.stop(now + 0.08);
-  } catch (e) {
+  } catch {
     // Graceful fallback
   }
 }
@@ -86,7 +86,7 @@ export function playSuccessChime() {
       osc.start(startTime);
       osc.stop(startTime + 0.45);
     });
-  } catch (e) {
+  } catch {
     // Graceful fallback
   }
 }
@@ -158,7 +158,7 @@ export function stopAmbientNoise() {
     try {
       ambientSource.stop();
       ambientSource.disconnect();
-    } catch (e) {}
+    } catch {}
     ambientSource = null;
   }
 }
