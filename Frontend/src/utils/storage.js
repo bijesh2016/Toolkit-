@@ -11,7 +11,7 @@ export function getRecentTools() {
   try {
     const data = localStorage.getItem(RECENT_KEY);
     return data ? JSON.parse(data) : [];
-  } catch (e) {
+  } catch {
     return [];
   }
 }
@@ -24,7 +24,7 @@ export function addRecentTool(toolId) {
     const trimmed = list.slice(0, 8);
     localStorage.setItem(RECENT_KEY, JSON.stringify(trimmed));
     window.dispatchEvent(new Event('toolshub_storage_updated'));
-  } catch (e) {}
+  } catch {}
 }
 
 export function getFavorites() {
@@ -32,7 +32,7 @@ export function getFavorites() {
   try {
     const data = localStorage.getItem(FAVORITES_KEY);
     return data ? JSON.parse(data) : ['bs-ad-converter', 'json-formatter', 'image-to-pdf'];
-  } catch (e) {
+  } catch {
     return [];
   }
 }
@@ -52,7 +52,7 @@ export function toggleFavorite(toolId) {
     localStorage.setItem(FAVORITES_KEY, JSON.stringify(list));
     window.dispatchEvent(new Event('toolshub_storage_updated'));
     return isFav;
-  } catch (e) {
+  } catch {
     return false;
   }
 }
@@ -83,7 +83,7 @@ export function getEmailGenerationCount() {
   try {
     const val = localStorage.getItem(EMAIL_COUNT_KEY);
     return val ? parseInt(val, 10) : 0;
-  } catch (e) {
+  } catch {
     return 0;
   }
 }
