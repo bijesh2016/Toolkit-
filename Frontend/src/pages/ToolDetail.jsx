@@ -24,6 +24,7 @@ import TimestampConverter from '../tools/developer/TimestampConverter';
 
 // Nepal
 import BsAdConverter from '../tools/nepal/BsAdConverter';
+import NepaliDateAgeToolkit from '../tools/nepal/NepaliDateAgeToolkit';
 import NepaliUnicodeTyping from '../tools/nepal/NepaliUnicodeTyping';
 import NprToWords from '../tools/nepal/NprToWords';
 import NepalLocations from '../tools/nepal/NepalLocations';
@@ -78,6 +79,7 @@ import AiCodeExplainer from '../tools/ai/AiCodeExplainer';
 const COMPONENT_MAP = {
   // Nepal
   'bs-ad-converter': BsAdConverter,
+  'nepali-date-age-toolkit': NepaliDateAgeToolkit,
   'nepali-unicode': NepaliUnicodeTyping,
   'npr-to-words': NprToWords,
   'nepal-locations': NepalLocations,
