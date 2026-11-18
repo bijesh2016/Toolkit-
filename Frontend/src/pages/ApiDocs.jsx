@@ -52,7 +52,7 @@ export default function ApiDocs({ onShowToast }) {
         </div>
 
         <a
-          href="http://localhost:5000/api/docs"
+          href="/api/docs"
           target="_blank"
           rel="noopener noreferrer"
           className="px-5 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs sm:text-sm flex items-center gap-2 shadow-sm transition-all self-start md:self-auto shrink-0 relative z-10 cursor-pointer"
